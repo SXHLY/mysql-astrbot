@@ -14,7 +14,7 @@ sys.path.insert(0, current_dir)
 from mydb_connector import MySQLConnector
 
 
-class MySQLCommandsPlugin(Star):
+class MySQLInteractionPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
         self.db = None
@@ -115,19 +115,46 @@ class MySQLCommandsPlugin(Star):
         except Exception as e:
             yield event.plain_result(f"❌ 删除失败: {str(e)}")
 
+    @filter.command("query")
+    async def custom_query(self, event: AstrMessageEvent, *, sql: str):
+        """执行自定义SQL查询
+        用法: /query <SQL语句>
+        """
+        if not self.db:
+            yield event.plain_result("❌ 数据库未连接")
+            return
+
+        try:
+            result = self.db.execute_query(sql)
+            if not result:
+                yield event.plain_result("🔍 查询结果为空")
+                return
+
+            # 格式化查询结果
+            output = "🔍 查询结果:\n"
+            for i, row in enumerate(result[:10]):  # 限制最多显示10行
+                output += f"{i + 1}. {str(row)}\n"
+
+            if len(result) > 10:
+                output += f"\n📄 共 {len(result)} 条记录，只显示前10条"
+
+            yield event.plain_result(output)
+        except Exception as e:
+            yield event.plain_result(f"❌ 查询失败: {str(e)}")
+
     async def terminate(self):
         if self.db:
             self.db.close()
             logger.info("🔌 数据库连接已关闭")
 
 
-# 新的插件注册方式
+# 插件注册函数
 def setup(plugin_manager):
     plugin_manager.register_star(
-        "astrbot_plugin_mysql_commands",
-        MySQLCommandsPlugin,
+        "mysql-interaction",  # 与metadata.yaml中的name一致
+        MySQLInteractionPlugin,
         author="是小火龙压",
-        description="MySQL指令管理插件",
+        description="与MySQL数据库交互的插件",
         version="Alpha-v0.1",
         repo_url="https://github.com/SXHLY/mysql-astrbot"
     )

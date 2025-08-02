@@ -1,0 +1,6 @@
+CREATE TABLE `userdb_main_1` (
+    `型号` int NOT NULL,
+    `编号` int NOT NULL,
+    `位置` varchar(100) NOT NULL,
+    `创建时间` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
